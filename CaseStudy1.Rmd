@@ -11,19 +11,17 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 # install.packages("plotly")
-```{r}
+```{r message=FALSE}
 library(plotly)
 ```
 
-I examined Gross Domestic Product data and Education Statistics from the World Bank’s website. The data contained information on the Gross Domestic Product and relative rankings of 190 countries and Education Statistics including income levels for those countries. After cleaning and merging the data sets, the GDP data was analyzed to see if there are any notable trends between income group and GDP.   
-
-#download GDP data from World Bank as GDP190.csv
-#download Education data from World Bank as EDSTATS.csv
+## Download GDP data from World Bank as GDP190.csv
+## Download Education data from World Bank as EDSTATS.csv
 ```{r}
  source("Data/Gather1.R")
 ```
 
-# Reads World Bank data into data frames ED and GDP
+## Reads World Bank data into data frames ED and GDP
 ```{r}
 source("Data/Gather2.R")
 ```
@@ -50,6 +48,9 @@ GDPsmall[,c(2,4)] <- apply(GDPsmall[,c(2,4)], 2, function(x) {as.numeric(gsub(",
 Select relevant columns of complete data:
 EDsmall <- ED[,c(1,2,3,4,7)]
 
+#Introduction
+I examined Gross Domestic Product data and Education Statistics from the World Bank’s website. The data contained information on the Gross Domestic Product and relative rankings of 190 countries, and Education Statistics including income levels for those countries. After cleaning and merging the data sets, the GDP data was analyzed to see if there are any notable trends between income group and GDP.
+
 ##Questions on Merged Data
 1. Merge the data based on the country shortcode. How many of the IDs match?
 ```{r}
@@ -58,14 +59,15 @@ source("Data/Merge.r")
 190 IDs match the 190 countries with GDP data. The remaining 44 observations are for countries without GDP data or are summary data for different regions or income groups. 
 
 2. Sort the data frame in ascending order by GDP (so United States is last). What is the 13th country in the resulting data frame?
+<br>
 "St. Kitts and Nevis"
 ```{r}
 sort.by.GDP <- GDPmergeED[order(GDPmergeED$GDP),]
 sort.by.GDP[13,3]
 ```
 
-3 What are the average GDP rankings for the "High income: OECD" and "High income:
-nonOECD" groups?
+3. What are the average GDP rankings for the "High income: OECD" and "High income:nonOECD" groups?
+<br>
 The average GDP ranking for the "High income: OECD" group is 32.96667.
 ```{r}
 hi.OECD <- na.omit(GDPmergeED[GDPmergeED$Income.Group == "High income: OECD",])
@@ -89,19 +91,20 @@ plot_ly(GDPmergeED, x = ~GDP.Rank.2012, y = ~GDP, text = ~Long.Name.x, type = 's
            xaxis = list(showgrid = FALSE),
            yaxis = list(showgrid = FALSE))
 ```
-
-plot_ly(GDPmergeED, x = ~GDP.Rank.2012, y = ~GDP, text = ~Long.Name.x, type = 'scatter', mode = 'markers', color = ~Income.Group, size = ~GDP/16244600,
-        marker = list(opacity = 0.5)) %>%
-    layout(title = 'GDP rank to Gross',
-           xaxis = list(showgrid = FALSE),
-           yaxis = list(showgrid = FALSE))
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+<br>
+5. Cut the GDP ranking into 5 separate quantile groups. Make a table versus Income.Group. How many countries are Lower middle income but among the 38 nations with highest
+GDP?
+```{r}
+GDPmergeED$quantile <- cut(GDPmergeED$GDP.Rank.2012, 5, labels = F)
+HiGDPloin <- GDPmergeED[(GDPmergeED$quantile == 1) & (GDPmergeED$Income.Group == "Lower middle income"),]
+print(HiGDPloin$Long.Name.x)
 ```
+Five countries: China, Egypt, Indonesia, India, Thailand are among the top quantile in GDP but in the "lower middle income" group.        
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+#Conclusion
+Examining the high GDP countries shows that a High GDP(1st quantile) does not mean that a country will have a high average income. It is not apparent if income inequality is to blame for this disparity because the five countries (China, Egypt, Indonesia, India, Thailand) with lower middle income and large GDP have large populations. An examination of GDP per capita would elucidate this question. It is worth noting that China, Egypt, Indonesia, and India were all former colonies, and it would be worth investigating if that factor could explain the large GDP without similar increase in income.  
+
+The plot of the GDP of each country shows that the majority of the 190 countries are dwarfed by the top 4 countries in GDP (US, China, Japan, Germany).  A high GDP does appear to correlate to a higher income group, but this would need further examination to draw statistical conclusions.  Further analysis of this data would benefit from GDP per Capita data and multiple years of data to graph trends.
+   
+
