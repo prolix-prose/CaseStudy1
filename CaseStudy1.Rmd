@@ -1,0 +1,107 @@
+---
+title: "Case Study 1"
+author: "Scott Payne"
+date: "October 30, 2016"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# install.packages("plotly")
+```{r}
+library(plotly)
+```
+
+I examined Gross Domestic Product data and Education Statistics from the World Bank’s website. The data contained information on the Gross Domestic Product and relative rankings of 190 countries and Education Statistics including income levels for those countries. After cleaning and merging the data sets, the GDP data was analyzed to see if there are any notable trends between income group and GDP.   
+
+#download GDP data from World Bank as GDP190.csv
+#download Education data from World Bank as EDSTATS.csv
+```{r}
+ source("Data/Gather1.R")
+```
+
+# Reads World Bank data into data frames ED and GDP
+```{r}
+source("Data/Gather2.R")
+```
+##Data Cleaning
+```{r}
+source("Data/CleanDFs.R")
+```
+## List of steps used to clean the raw data for analysis
+##GDP Data Set:
+cleans the empty rows at the top of the data set:
+GDPsmall <- GDP[5:194,]
+
+removes empty columns from the data set:
+GDPsmall <- GDPsmall[,-c(3,6,7,8,9,10)]
+
+adds appropriate headers to columns in the data set:
+colnames(GDPsmall) <- c("CountryCode","GDP.Rank.2012","Long.Name","GDP")
+
+converts character columns to numeric and removes commas from those values:
+GDPsmall[,c(2,4)] <- apply(GDPsmall[,c(2,4)], 2, function(x) {as.numeric(gsub(",", "", x))})
+
+
+##ED Data Set:
+Select relevant columns of complete data:
+EDsmall <- ED[,c(1,2,3,4,7)]
+
+##Questions on Merged Data
+1. Merge the data based on the country shortcode. How many of the IDs match?
+```{r}
+source("Data/Merge.r")
+```
+190 IDs match the 190 countries with GDP data. The remaining 44 observations are for countries without GDP data or are summary data for different regions or income groups. 
+
+2. Sort the data frame in ascending order by GDP (so United States is last). What is the 13th country in the resulting data frame?
+"St. Kitts and Nevis"
+```{r}
+sort.by.GDP <- GDPmergeED[order(GDPmergeED$GDP),]
+sort.by.GDP[13,3]
+```
+
+3 What are the average GDP rankings for the "High income: OECD" and "High income:
+nonOECD" groups?
+The average GDP ranking for the "High income: OECD" group is 32.96667.
+```{r}
+hi.OECD <- na.omit(GDPmergeED[GDPmergeED$Income.Group == "High income: OECD",])
+hi.OECD.avgrank <- mean(hi.OECD[[2]])
+print(hi.OECD.avgrank)
+```
+
+
+The average GDP ranking for the "High income: nonOECD" group is 91.91304.
+```{r}
+hi.nonOECD <- na.omit(GDPmergeED[GDPmergeED$Income.Group == "High income: nonOECD",])
+hi.nonOECD.avgrank <- mean(hi.nonOECD[[2]])
+print(hi.nonOECD.avgrank)
+```
+
+4. Plot the GDP for all of the countries. Use ggplot2 to color your plot by Income Group.
+```{r}
+plot_ly(GDPmergeED, x = ~GDP.Rank.2012, y = ~GDP, text = ~Long.Name.x, type = 'scatter', mode = 'markers', color = ~Income.Group, size = ~GDP/16244600,
+        marker = list(opacity = 0.5)) %>%
+    layout(title = 'GDP rank to Gross',
+           xaxis = list(showgrid = FALSE),
+           yaxis = list(showgrid = FALSE))
+```
+
+plot_ly(GDPmergeED, x = ~GDP.Rank.2012, y = ~GDP, text = ~Long.Name.x, type = 'scatter', mode = 'markers', color = ~Income.Group, size = ~GDP/16244600,
+        marker = list(opacity = 0.5)) %>%
+    layout(title = 'GDP rank to Gross',
+           xaxis = list(showgrid = FALSE),
+           yaxis = list(showgrid = FALSE))
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
